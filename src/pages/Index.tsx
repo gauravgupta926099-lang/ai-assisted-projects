@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { getUserLocation } from "@/lib/geo";
+import { watchUserLocation } from "@/lib/geo";
 import { QuestCard } from "@/components/QuestCard";
 import { PostQuestForm } from "@/components/PostQuestForm";
 import { AuthModal } from "@/components/AuthModal";
@@ -38,14 +38,13 @@ export default function Index() {
 
   useEffect(() => {
     fetchGigs();
-    getUserLocation()
-      .then(({ lat, lng }) => {
+    const stopWatching = watchUserLocation(
+      ({ lat, lng }) => {
         setUserLat(lat);
         setUserLng(lng);
-      })
-      .catch(() => {
-        // Location denied - show all quests but mark distance unknown
-      });
+      }
+    );
+    return () => stopWatching();
   }, [fetchGigs]);
 
   return (
