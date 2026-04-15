@@ -1,5 +1,3 @@
-const PSIT_LAT = 26.4499;
-const PSIT_LNG = 80.3319;
 const MAX_RANGE_KM = 2;
 
 export function getDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -14,22 +12,24 @@ export function getDistanceKm(lat1: number, lon1: number, lat2: number, lon2: nu
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-export function isWithinRange(lat: number, lng: number): boolean {
-  return getDistanceKm(lat, lng, PSIT_LAT, PSIT_LNG) <= MAX_RANGE_KM;
+export function isWithinRange(userLat: number, userLng: number, gigLat: number, gigLng: number): boolean {
+  return getDistanceKm(userLat, userLng, gigLat, gigLng) <= MAX_RANGE_KM;
 }
 
-export function getUserLocation(): Promise<{ lat: number; lng: number }> {
-  return new Promise((resolve, reject) => {
-    if (!navigator.geolocation) {
-      reject(new Error("Geolocation not supported"));
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-      (err) => reject(err),
-      { enableHighAccuracy: true, timeout: 10000 }
-    );
-  });
+export function watchUserLocation(
+  onUpdate: (pos: { lat: number; lng: number }) => void,
+  onError?: (err: GeolocationPositionError) => void
+): () => void {
+  if (!navigator.geolocation) {
+    onError?.({ code: 2, message: "Geolocation not supported" } as GeolocationPositionError);
+    return () => {};
+  }
+  const id = navigator.geolocation.watchPosition(
+    (pos) => onUpdate({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+    (err) => onError?.(err),
+    { enableHighAccuracy: true }
+  );
+  return () => navigator.geolocation.clearWatch(id);
 }
 
-export { PSIT_LAT, PSIT_LNG, MAX_RANGE_KM };
+export { MAX_RANGE_KM };
