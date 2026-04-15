@@ -14,7 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      gigs: {
+        Row: {
+          created_at: string
+          creator_id: string
+          description: string | null
+          id: string
+          latitude: number
+          longitude: number
+          reward_amount: number
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          creator_id: string
+          description?: string | null
+          id?: string
+          latitude?: number
+          longitude?: number
+          reward_amount?: number
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          creator_id?: string
+          description?: string | null
+          id?: string
+          latitude?: number
+          longitude?: number
+          reward_amount?: number
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
