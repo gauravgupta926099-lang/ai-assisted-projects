@@ -91,7 +91,7 @@ export default function Index() {
           <div>
             {showForm ? (
               <div className="space-y-2">
-                <PostQuestForm onPosted={() => { fetchGigs(); setShowForm(false); }} />
+                <PostQuestForm onPosted={() => { fetchGigs(); setShowForm(false); }} userLat={userLat} userLng={userLng} />
                 <button
                   onClick={() => setShowForm(false)}
                   className="w-full text-xs text-muted-foreground hover:text-foreground transition-colors"
