@@ -81,7 +81,7 @@ export function QuestCard({ gig, userLat, userLng, currentUserId, onUpdate }: Qu
 
       // Award XP to acceptor
       if (gig.accepted_by) {
-        await supabase.rpc("award_xp" as any, { target_user_id: gig.accepted_by, points: 10 });
+        await (supabase.rpc as any)("award_xp", { target_user_id: gig.accepted_by, points: 10 });
       }
 
       toast({ title: "Quest Complete! 🎉", description: `₹${gig.reward_amount} released + 10 XP awarded` });
