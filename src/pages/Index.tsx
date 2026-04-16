@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { watchUserLocation } from "@/lib/geo";
+import { watchUserLocation, getDistanceKm } from "@/lib/geo";
 import { QuestCard } from "@/components/QuestCard";
 import { PostQuestForm } from "@/components/PostQuestForm";
 import { AuthModal } from "@/components/AuthModal";
+import { ProfileBadge } from "@/components/ProfileBadge";
 import { Button } from "@/components/ui/button";
 
 interface Gig {
@@ -16,6 +17,8 @@ interface Gig {
   longitude: number;
   status: string;
   created_at: string;
+  creator_id: string;
+  accepted_by: string | null;
 }
 
 export default function Index() {
@@ -23,6 +26,7 @@ export default function Index() {
   const [gigs, setGigs] = useState<Gig[]>([]);
   const [userLat, setUserLat] = useState<number | null>(null);
   const [userLng, setUserLng] = useState<number | null>(null);
+  const [locationError, setLocationError] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [loadingGigs, setLoadingGigs] = useState(true);
@@ -42,10 +46,31 @@ export default function Index() {
       ({ lat, lng }) => {
         setUserLat(lat);
         setUserLng(lng);
-      }
+        setLocationError(false);
+      },
+      () => setLocationError(true)
     );
     return () => stopWatching();
   }, [fetchGigs]);
+
+  // Real-time subscription for gigs
+  useEffect(() => {
+    const channel = supabase
+      .channel("gigs-realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "gigs" },
+        () => fetchGigs()
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [fetchGigs]);
+
+  // Filter gigs to only show within 2km
+  const nearbyGigs = gigs.filter((gig) => {
+    if (userLat === null || userLng === null) return true; // show all if no location yet
+    return getDistanceKm(userLat, userLng, gig.latitude, gig.longitude) <= 2;
+  });
 
   return (
     <div className="min-h-screen bg-background">
@@ -56,9 +81,7 @@ export default function Index() {
           <div className="flex items-center gap-2">
             {user ? (
               <>
-                <span className="text-xs text-muted-foreground hidden sm:inline truncate max-w-[120px]">
-                  {user.email}
-                </span>
+                <ProfileBadge userId={user.id} />
                 <Button variant="ghost" size="sm" onClick={signOut} className="text-xs text-muted-foreground">
                   Logout
                 </Button>
@@ -77,11 +100,19 @@ export default function Index() {
         <section className="text-center space-y-2">
           <h2 className="font-heading text-2xl font-bold text-foreground">Quest Board</h2>
           <p className="text-sm text-muted-foreground">
-            Accept quests near PSIT Kanpur • Earn ₹ • Help fellow students
+            Accept quests within 2km • Earn ₹ • Help fellow students
           </p>
-          {userLat !== null && (
+          {locationError ? (
+            <span className="inline-flex items-center gap-1 rounded-full bg-destructive/20 px-3 py-1 text-xs font-heading text-destructive">
+              🔴 GPS Denied — Enable location
+            </span>
+          ) : userLat !== null ? (
             <span className="inline-flex items-center gap-1 rounded-full bg-quest-xp/20 px-3 py-1 text-xs font-heading text-quest-xp animate-pulse-glow">
               📡 Location Active
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 rounded-full bg-muted px-3 py-1 text-xs font-heading text-muted-foreground">
+              ⏳ Acquiring GPS...
             </span>
           )}
         </section>
@@ -110,27 +141,23 @@ export default function Index() {
         {/* Quest Feed */}
         <section className="space-y-3">
           <h3 className="font-heading text-xs uppercase tracking-widest text-muted-foreground">
-            Active Quests ({gigs.length})
+            Nearby Quests ({nearbyGigs.length})
           </h3>
           {loadingGigs ? (
             <div className="text-center py-8 text-muted-foreground text-sm">Loading quests...</div>
-          ) : gigs.length === 0 ? (
+          ) : nearbyGigs.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground text-sm">
-              No quests available. Be the first to post! 🗡️
+              {userLat === null ? "Enable GPS to see nearby quests 📍" : "No quests within 2km. Be the first to post! 🗡️"}
             </div>
           ) : (
-            gigs.map((gig) => (
+            nearbyGigs.map((gig) => (
               <QuestCard
                 key={gig.id}
-                title={gig.title}
-                description={gig.description}
-                reward={gig.reward_amount}
-                lat={gig.latitude}
-                lng={gig.longitude}
+                gig={gig}
                 userLat={userLat}
                 userLng={userLng}
-                status={gig.status}
-                createdAt={gig.created_at}
+                currentUserId={user?.id ?? null}
+                onUpdate={fetchGigs}
               />
             ))
           )}
