@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       gigs: {
         Row: {
+          accepted_at: string | null
           accepted_by: string | null
           created_at: string
           creator_id: string
@@ -23,12 +24,15 @@ export type Database = {
           id: string
           latitude: number
           longitude: number
+          proof_image_url: string | null
+          proof_note: string | null
           reward_amount: number
           status: string
           title: string
           updated_at: string
         }
         Insert: {
+          accepted_at?: string | null
           accepted_by?: string | null
           created_at?: string
           creator_id: string
@@ -36,12 +40,15 @@ export type Database = {
           id?: string
           latitude?: number
           longitude?: number
+          proof_image_url?: string | null
+          proof_note?: string | null
           reward_amount?: number
           status?: string
           title: string
           updated_at?: string
         }
         Update: {
+          accepted_at?: string | null
           accepted_by?: string | null
           created_at?: string
           creator_id?: string
@@ -49,6 +56,8 @@ export type Database = {
           id?: string
           latitude?: number
           longitude?: number
+          proof_image_url?: string | null
+          proof_note?: string | null
           reward_amount?: number
           status?: string
           title?: string
@@ -61,6 +70,7 @@ export type Database = {
           created_at: string
           display_name: string | null
           id: string
+          payment_info: string | null
           updated_at: string
           user_id: string
           xp: number
@@ -69,6 +79,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          payment_info?: string | null
           updated_at?: string
           user_id: string
           xp?: number
@@ -77,6 +88,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          payment_info?: string | null
           updated_at?: string
           user_id?: string
           xp?: number

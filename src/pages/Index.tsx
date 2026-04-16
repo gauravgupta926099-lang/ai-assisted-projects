@@ -19,6 +19,9 @@ interface Gig {
   created_at: string;
   creator_id: string;
   accepted_by: string | null;
+  proof_note: string | null;
+  proof_image_url: string | null;
+  accepted_at: string | null;
 }
 
 export default function Index() {
