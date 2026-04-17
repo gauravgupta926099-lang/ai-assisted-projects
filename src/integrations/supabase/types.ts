@@ -21,6 +21,8 @@ export type Database = {
           created_at: string
           creator_id: string
           description: string | null
+          duration_minutes: number | null
+          expires_at: string | null
           id: string
           latitude: number
           longitude: number
@@ -37,6 +39,8 @@ export type Database = {
           created_at?: string
           creator_id: string
           description?: string | null
+          duration_minutes?: number | null
+          expires_at?: string | null
           id?: string
           latitude?: number
           longitude?: number
@@ -53,6 +57,8 @@ export type Database = {
           created_at?: string
           creator_id?: string
           description?: string | null
+          duration_minutes?: number | null
+          expires_at?: string | null
           id?: string
           latitude?: number
           longitude?: number
