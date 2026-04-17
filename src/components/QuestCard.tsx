@@ -20,6 +20,20 @@ interface Gig {
   proof_note: string | null;
   proof_image_url: string | null;
   accepted_at: string | null;
+  duration_minutes: number | null;
+  expires_at: string | null;
+}
+
+function formatTimeLeft(expiresAt: string): string {
+  const ms = new Date(expiresAt).getTime() - Date.now();
+  if (ms <= 0) return "Expired";
+  const mins = Math.floor(ms / 60000);
+  if (mins < 60) return `${mins}m left`;
+  const hrs = Math.floor(mins / 60);
+  const remMin = mins % 60;
+  if (hrs < 24) return remMin ? `${hrs}h ${remMin}m left` : `${hrs}h left`;
+  const days = Math.floor(hrs / 24);
+  return `${days}d left`;
 }
 
 interface QuestCardProps {
@@ -179,6 +193,11 @@ export function QuestCard({ gig, userLat, userLng, currentUserId, onUpdate }: Qu
               <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-heading ${statusClass}`}>
                 {statusLabel}
               </span>
+              {isOpen && gig.expires_at && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-destructive/15 px-2.5 py-0.5 text-xs font-heading text-destructive">
+                  ⏱️ {formatTimeLeft(gig.expires_at)}
+                </span>
+              )}
               {(isAccepted || isProofSubmitted) && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-accent/10 px-2.5 py-0.5 text-xs font-heading text-accent">
                   🔒 ₹{gig.reward_amount} Escrowed

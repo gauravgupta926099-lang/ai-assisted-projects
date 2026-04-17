@@ -5,9 +5,10 @@ Deno.serve(async () => {
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const supabase = createClient(supabaseUrl, serviceKey);
 
+  const nowIso = new Date().toISOString();
   const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
 
-  // Find accepted gigs older than 2 hours
+  // 1. Stale "accepted" quests (no proof in 2h) -> back to open
   const { data: staleGigs, error: fetchErr } = await supabase
     .from("gigs")
     .select("id")
@@ -18,32 +19,43 @@ Deno.serve(async () => {
     return new Response(JSON.stringify({ error: fetchErr.message }), { status: 500 });
   }
 
-  if (!staleGigs || staleGigs.length === 0) {
-    return new Response(JSON.stringify({ message: "No stale quests", count: 0 }));
+  let returnedCount = 0;
+  if (staleGigs && staleGigs.length > 0) {
+    const ids = staleGigs.map((g) => g.id);
+    const { error: updateErr } = await supabase
+      .from("gigs")
+      .update({ status: "open", accepted_by: null, accepted_at: null })
+      .in("id", ids);
+    if (updateErr) {
+      return new Response(JSON.stringify({ error: updateErr.message }), { status: 500 });
+    }
+
+    await supabase
+      .from("transactions")
+      .update({ status: "cancelled" })
+      .in("gig_id", ids)
+      .eq("status", "pending");
+
+    returnedCount = ids.length;
   }
 
-  const ids = staleGigs.map((g) => g.id);
-
-  // Reset gigs back to open
-  const { error: updateErr } = await supabase
+  // 2. Expired open quests (past their duration) -> mark expired
+  const { data: expired, error: expErr } = await supabase
     .from("gigs")
-    .update({ status: "open", accepted_by: null, accepted_at: null })
-    .in("id", ids);
+    .select("id")
+    .eq("status", "open")
+    .not("expires_at", "is", null)
+    .lt("expires_at", nowIso);
 
-  if (updateErr) {
-    return new Response(JSON.stringify({ error: updateErr.message }), { status: 500 });
+  let expiredCount = 0;
+  if (!expErr && expired && expired.length > 0) {
+    const ids = expired.map((g) => g.id);
+    await supabase.from("gigs").update({ status: "expired" }).in("id", ids);
+    expiredCount = ids.length;
   }
 
-  // Cancel pending transactions
-  const { error: txErr } = await supabase
-    .from("transactions")
-    .update({ status: "cancelled" })
-    .in("gig_id", ids)
-    .eq("status", "pending");
-
-  if (txErr) {
-    return new Response(JSON.stringify({ error: txErr.message }), { status: 500 });
-  }
-
-  return new Response(JSON.stringify({ message: "Cancelled stale quests", count: ids.length }));
+  return new Response(
+    JSON.stringify({ returned: returnedCount, expired: expiredCount }),
+    { headers: { "Content-Type": "application/json" } },
+  );
 });
