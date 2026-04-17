@@ -9,6 +9,8 @@ import { ProfileBadge } from "@/components/ProfileBadge";
 import { QuestMap } from "@/components/QuestMap";
 import { Button } from "@/components/ui/button";
 
+type SortMode = "newest" | "nearest" | "ending" | "reward";
+
 interface Gig {
   id: string;
   title: string;
@@ -23,6 +25,8 @@ interface Gig {
   proof_note: string | null;
   proof_image_url: string | null;
   accepted_at: string | null;
+  duration_minutes: number | null;
+  expires_at: string | null;
 }
 
 export default function Index() {
@@ -34,6 +38,7 @@ export default function Index() {
   const [showAuth, setShowAuth] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [loadingGigs, setLoadingGigs] = useState(true);
+  const [sortMode, setSortMode] = useState<SortMode>("newest");
 
   const fetchGigs = useCallback(async () => {
     const { data } = await supabase
@@ -70,10 +75,41 @@ export default function Index() {
     return () => { supabase.removeChannel(channel); };
   }, [fetchGigs]);
 
-  // Filter gigs to only show within 2km
-  const nearbyGigs = gigs.filter((gig) => {
-    if (userLat === null || userLng === null) return true; // show all if no location yet
+  const now = Date.now();
+
+  // Hide completed quests from board; hide expired open quests
+  const visibleGigs = gigs.filter((gig) => {
+    if (gig.status === "completed") return false;
+    if (gig.status === "open" && gig.expires_at && new Date(gig.expires_at).getTime() < now) return false;
+    return true;
+  });
+
+  // Filter to only show within 2km
+  const nearbyGigs = visibleGigs.filter((gig) => {
+    if (userLat === null || userLng === null) return true;
     return getDistanceKm(userLat, userLng, gig.latitude, gig.longitude) <= 2;
+  });
+
+  // Sorting
+  const sortedGigs = [...nearbyGigs].sort((a, b) => {
+    switch (sortMode) {
+      case "nearest": {
+        if (userLat === null || userLng === null) return 0;
+        const da = getDistanceKm(userLat, userLng, a.latitude, a.longitude);
+        const db = getDistanceKm(userLat, userLng, b.latitude, b.longitude);
+        return da - db;
+      }
+      case "ending": {
+        const ea = a.expires_at ? new Date(a.expires_at).getTime() : Infinity;
+        const eb = b.expires_at ? new Date(b.expires_at).getTime() : Infinity;
+        return ea - eb;
+      }
+      case "reward":
+        return b.reward_amount - a.reward_amount;
+      case "newest":
+      default:
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    }
   });
 
   return (
