@@ -193,6 +193,11 @@ export function QuestCard({ gig, userLat, userLng, currentUserId, onUpdate }: Qu
               <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-heading ${statusClass}`}>
                 {statusLabel}
               </span>
+              {isOpen && gig.expires_at && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-destructive/15 px-2.5 py-0.5 text-xs font-heading text-destructive">
+                  ⏱️ {formatTimeLeft(gig.expires_at)}
+                </span>
+              )}
               {(isAccepted || isProofSubmitted) && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-accent/10 px-2.5 py-0.5 text-xs font-heading text-accent">
                   🔒 ₹{gig.reward_amount} Escrowed
