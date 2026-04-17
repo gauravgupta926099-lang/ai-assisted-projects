@@ -77,7 +77,7 @@ export function QuestMap({ userLat, userLng, gigs }: QuestMapProps) {
   return (
     <div
       ref={containerRef}
-      className="w-full h-64 rounded-lg border border-primary/30 overflow-hidden glow-primary"
+      className="w-full h-full min-h-[16rem] rounded-lg border border-primary/30 overflow-hidden glow-primary"
       style={{ zIndex: 0 }}
     />
   );
