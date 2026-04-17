@@ -20,6 +20,20 @@ interface Gig {
   proof_note: string | null;
   proof_image_url: string | null;
   accepted_at: string | null;
+  duration_minutes: number | null;
+  expires_at: string | null;
+}
+
+function formatTimeLeft(expiresAt: string): string {
+  const ms = new Date(expiresAt).getTime() - Date.now();
+  if (ms <= 0) return "Expired";
+  const mins = Math.floor(ms / 60000);
+  if (mins < 60) return `${mins}m left`;
+  const hrs = Math.floor(mins / 60);
+  const remMin = mins % 60;
+  if (hrs < 24) return remMin ? `${hrs}h ${remMin}m left` : `${hrs}h left`;
+  const days = Math.floor(hrs / 24);
+  return `${days}d left`;
 }
 
 interface QuestCardProps {
