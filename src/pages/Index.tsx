@@ -6,6 +6,7 @@ import { QuestCard } from "@/components/QuestCard";
 import { PostQuestForm } from "@/components/PostQuestForm";
 import { AuthModal } from "@/components/AuthModal";
 import { ProfileBadge } from "@/components/ProfileBadge";
+import { QuestMap } from "@/components/QuestMap";
 import { Button } from "@/components/ui/button";
 
 interface Gig {
@@ -140,6 +141,14 @@ export default function Index() {
             )}
           </div>
         )}
+
+        {/* Map View */}
+        <section className="space-y-2">
+          <h3 className="font-heading text-xs uppercase tracking-widest text-muted-foreground">
+            🗺️ Quest Map
+          </h3>
+          <QuestMap userLat={userLat} userLng={userLng} gigs={nearbyGigs} />
+        </section>
 
         {/* Quest Feed */}
         <section className="space-y-3">
