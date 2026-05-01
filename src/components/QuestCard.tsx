@@ -5,6 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
 import { PayoutAnimation } from "@/components/PayoutAnimation";
+import { useAuth } from "@/hooks/useAuth";
+
+const DEV_EMAIL = "gauravgupta926099@gmail.com";
 
 interface Gig {
   id: string;
@@ -45,6 +48,8 @@ interface QuestCardProps {
 }
 
 export function QuestCard({ gig, userLat, userLng, currentUserId, onUpdate }: QuestCardProps) {
+  const { user } = useAuth();
+  const isDev = user?.email === DEV_EMAIL;
   const [loading, setLoading] = useState(false);
   const [proofNote, setProofNote] = useState("");
   const [showProofForm, setShowProofForm] = useState(false);
@@ -158,6 +163,24 @@ export function QuestCard({ gig, userLat, userLng, currentUserId, onUpdate }: Qu
 
   const openNavigation = () => {
     window.open(`https://www.google.com/maps/dir/?api=1&destination=${gig.latitude},${gig.longitude}`, "_blank");
+  };
+
+  const handleDevDelete = async () => {
+    if (!isDev) return;
+    if (!confirm(`[DEV] Permanently delete quest "${gig.title}"?`)) return;
+    setLoading(true);
+    try {
+      // Clear related transactions first (FK-free but logical)
+      await supabase.from("transactions").delete().eq("gig_id", gig.id);
+      const { error } = await supabase.from("gigs").delete().eq("id", gig.id);
+      if (error) throw error;
+      toast({ title: "Quest deleted", description: "Removed by dev override" });
+      onUpdate();
+    } catch (err: any) {
+      toast({ title: "Delete failed", description: err.message, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const statusLabel = isCompleted ? "✅ Completed" : isProofSubmitted ? "📸 Proof Submitted" : isAccepted ? "⏳ In Progress" : "🟢 Open";
@@ -274,6 +297,20 @@ export function QuestCard({ gig, userLat, userLng, currentUserId, onUpdate }: Qu
             {isProofSubmitted && isAcceptor && (
               <p className="text-xs text-center text-accent font-heading">⏳ Awaiting poster verification</p>
             )}
+          </div>
+        )}
+
+        {isDev && (
+          <div className="mt-3 pt-3 border-t border-destructive/20">
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full border-destructive/40 text-destructive hover:bg-destructive/10 text-xs"
+              onClick={handleDevDelete}
+              disabled={loading}
+            >
+              🗑️ Dev: Delete Quest
+            </Button>
           </div>
         )}
       </div>

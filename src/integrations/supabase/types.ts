@@ -151,6 +151,7 @@ export type Database = {
         Args: { points: number; target_user_id: string }
         Returns: undefined
       }
+      is_dev_user: { Args: never; Returns: boolean }
     }
     Enums: {
       [_ in never]: never

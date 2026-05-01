@@ -55,33 +55,15 @@ export function QuestMap({ userLat, userLng, gigs }: QuestMapProps) {
     layer.clearLayers();
 
     if (userLat !== null && userLng !== null) {
-      const showBlurred = isDev && blurred;
-      const displayLat = showBlurred ? userLat + jitter(userLat) : userLat;
-      const displayLng = showBlurred ? userLng + jitter(userLng + 1) : userLng;
+      const userIcon = L.divIcon({
+        className: "",
+        html: `<div style="width:18px;height:18px;border-radius:50%;background:hsl(263 90% 60%);box-shadow:0 0 0 6px hsla(263 90% 60% / 0.25);border:2px solid white;"></div>`,
+        iconSize: [18, 18],
+        iconAnchor: [9, 9],
+      });
+      L.marker([userLat, userLng], { icon: userIcon }).addTo(layer).bindPopup("📍 You are here");
 
-      if (showBlurred) {
-        // Fuzzy approximate area instead of exact pin
-        L.circle([displayLat, displayLng], {
-          radius: 400,
-          color: "hsl(263 90% 60%)",
-          fillColor: "hsl(263 90% 60%)",
-          fillOpacity: 0.25,
-          weight: 2,
-          dashArray: "6 6",
-        })
-          .addTo(layer)
-          .bindPopup("🕶️ Approximate location (blurred)");
-      } else {
-        const userIcon = L.divIcon({
-          className: "",
-          html: `<div style="width:18px;height:18px;border-radius:50%;background:hsl(263 90% 60%);box-shadow:0 0 0 6px hsla(263 90% 60% / 0.25);border:2px solid white;"></div>`,
-          iconSize: [18, 18],
-          iconAnchor: [9, 9],
-        });
-        L.marker([userLat, userLng], { icon: userIcon }).addTo(layer).bindPopup("📍 You are here");
-      }
-
-      // 2km radius circle (always centered on real location for accurate gig matching visualization)
+      // 2km radius circle
       L.circle([userLat, userLng], {
         radius: 2000,
         color: "hsl(263 90% 60%)",
@@ -89,7 +71,7 @@ export function QuestMap({ userLat, userLng, gigs }: QuestMapProps) {
         fillOpacity: 0.05,
         weight: 1,
       }).addTo(layer);
-      map.setView([displayLat, displayLng], 14);
+      map.setView([userLat, userLng], 14);
     }
 
     gigs.forEach((g) => {
@@ -113,12 +95,22 @@ export function QuestMap({ userLat, userLng, gigs }: QuestMapProps) {
         className="w-full h-full min-h-[16rem] rounded-lg border border-primary/30 overflow-hidden glow-primary"
         style={{ zIndex: 0 }}
       />
+      {/* Full-map blur overlay (dev only) */}
+      {isDev && blurred && (
+        <div
+          className="absolute inset-0 z-[500] rounded-lg pointer-events-none backdrop-blur-md bg-background/30 flex items-center justify-center"
+        >
+          <span className="rounded-full bg-background/80 border border-primary/40 px-3 py-1 text-[10px] font-heading uppercase tracking-widest text-foreground shadow-md">
+            🕶️ Map Blurred (dev)
+          </span>
+        </div>
+      )}
       {isDev && (
         <button
           type="button"
           onClick={() => setBlurred((b) => !b)}
           className="absolute top-2 right-2 z-[1000] rounded-md border border-primary/40 bg-background/90 backdrop-blur px-2.5 py-1.5 text-[10px] font-heading uppercase tracking-widest text-foreground hover:bg-primary/15 transition-colors shadow-md"
-          title="Dev only: toggle location blur"
+          title="Dev only: toggle full-map blur"
         >
           {blurred ? "🕶️ Blurred" : "📍 Precise"}
           <span className="ml-1 text-[8px] text-muted-foreground">(dev)</span>
