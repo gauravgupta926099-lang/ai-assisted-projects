@@ -299,6 +299,20 @@ export function QuestCard({ gig, userLat, userLng, currentUserId, onUpdate }: Qu
             )}
           </div>
         )}
+
+        {isDev && (
+          <div className="mt-3 pt-3 border-t border-destructive/20">
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full border-destructive/40 text-destructive hover:bg-destructive/10 text-xs"
+              onClick={handleDevDelete}
+              disabled={loading}
+            >
+              🗑️ Dev: Delete Quest
+            </Button>
+          </div>
+        )}
       </div>
 
       {showPayout && (
