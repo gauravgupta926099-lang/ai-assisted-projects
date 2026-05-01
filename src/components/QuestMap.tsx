@@ -113,12 +113,22 @@ export function QuestMap({ userLat, userLng, gigs }: QuestMapProps) {
         className="w-full h-full min-h-[16rem] rounded-lg border border-primary/30 overflow-hidden glow-primary"
         style={{ zIndex: 0 }}
       />
+      {/* Full-map blur overlay (dev only) */}
+      {isDev && blurred && (
+        <div
+          className="absolute inset-0 z-[500] rounded-lg pointer-events-none backdrop-blur-md bg-background/30 flex items-center justify-center"
+        >
+          <span className="rounded-full bg-background/80 border border-primary/40 px-3 py-1 text-[10px] font-heading uppercase tracking-widest text-foreground shadow-md">
+            🕶️ Map Blurred (dev)
+          </span>
+        </div>
+      )}
       {isDev && (
         <button
           type="button"
           onClick={() => setBlurred((b) => !b)}
           className="absolute top-2 right-2 z-[1000] rounded-md border border-primary/40 bg-background/90 backdrop-blur px-2.5 py-1.5 text-[10px] font-heading uppercase tracking-widest text-foreground hover:bg-primary/15 transition-colors shadow-md"
-          title="Dev only: toggle location blur"
+          title="Dev only: toggle full-map blur"
         >
           {blurred ? "🕶️ Blurred" : "📍 Precise"}
           <span className="ml-1 text-[8px] text-muted-foreground">(dev)</span>
