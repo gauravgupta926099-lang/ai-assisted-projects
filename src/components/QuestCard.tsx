@@ -48,6 +48,8 @@ interface QuestCardProps {
 }
 
 export function QuestCard({ gig, userLat, userLng, currentUserId, onUpdate }: QuestCardProps) {
+  const { user } = useAuth();
+  const isDev = user?.email === DEV_EMAIL;
   const [loading, setLoading] = useState(false);
   const [proofNote, setProofNote] = useState("");
   const [showProofForm, setShowProofForm] = useState(false);
