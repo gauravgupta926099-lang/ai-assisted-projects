@@ -5,6 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
 import { PayoutAnimation } from "@/components/PayoutAnimation";
+import { useAuth } from "@/hooks/useAuth";
+
+const DEV_EMAIL = "gauravgupta926099@gmail.com";
 
 interface Gig {
   id: string;
