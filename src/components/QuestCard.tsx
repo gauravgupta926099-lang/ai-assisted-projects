@@ -165,6 +165,24 @@ export function QuestCard({ gig, userLat, userLng, currentUserId, onUpdate }: Qu
     window.open(`https://www.google.com/maps/dir/?api=1&destination=${gig.latitude},${gig.longitude}`, "_blank");
   };
 
+  const handleDevDelete = async () => {
+    if (!isDev) return;
+    if (!confirm(`[DEV] Permanently delete quest "${gig.title}"?`)) return;
+    setLoading(true);
+    try {
+      // Clear related transactions first (FK-free but logical)
+      await supabase.from("transactions").delete().eq("gig_id", gig.id);
+      const { error } = await supabase.from("gigs").delete().eq("id", gig.id);
+      if (error) throw error;
+      toast({ title: "Quest deleted", description: "Removed by dev override" });
+      onUpdate();
+    } catch (err: any) {
+      toast({ title: "Delete failed", description: err.message, variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const statusLabel = isCompleted ? "✅ Completed" : isProofSubmitted ? "📸 Proof Submitted" : isAccepted ? "⏳ In Progress" : "🟢 Open";
   const statusClass = isCompleted
     ? "bg-quest-xp/20 text-quest-xp"
